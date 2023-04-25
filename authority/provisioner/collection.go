@@ -93,7 +93,7 @@ func (c *Collection) LoadByToken(token *jose.JSONWebToken, claims *jose.Claims) 
 	}
   audiencesStr := strings.Join(audiences, ", ")
   audiencesClaimsStr := strings.Join(claims.Audience, ", ")
-  fmt.Printf("DEBUG: compare with server audiences: %s vs %s\n", audiencesClaims, audiencesStr)
+  fmt.Printf("DEBUG: compare with server audiences: %s vs %s\n", audiencesClaimsStr, audiencesStr)
 	// match with server audiences
 	if matchesAudience(claims.Audience, audiences) {
 		// Use fragment to get provisioner name (GCP, AWS, SSHPOP)
