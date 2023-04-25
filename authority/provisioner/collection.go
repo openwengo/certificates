@@ -91,22 +91,28 @@ func (c *Collection) LoadByToken(token *jose.JSONWebToken, claims *jose.Claims) 
 	} else {
 		audiences = c.audiences.WithFragment(fragment).All()
 	}
-
+  audiencesStr := strings.Join(audiences, ", ")
+  audiencesClaimsStr := strings.Join(claims.Audience, ", ")
+  fmt.Printf("DEBUG: compare with server audiences: %s vs %s\n", audiencesClaims, audiencesStr)
 	// match with server audiences
 	if matchesAudience(claims.Audience, audiences) {
 		// Use fragment to get provisioner name (GCP, AWS, SSHPOP)
 		if fragment != "" {
+      fmt.Printf("DEBUG: Audiences match fragment: %s\n", fragment)
 			return c.LoadByTokenID(fragment)
 		}
 		// If matches with stored audiences it will be a JWT token (default), and
 		// the id would be <issuer>:<kid>.
 		// TODO: is this ok?
+    fmt.Printf("DEBUG: Audiences match fragment empy, tokenid: %s\n", claims.Issuer + ":" + token.Headers[0].KeyID)
 		return c.LoadByTokenID(claims.Issuer + ":" + token.Headers[0].KeyID)
 	}
 
+  fmt.Printf("DEBUG: Audiences do not match\n")
 	// The ID will be just the clientID stored in azp, aud or tid.
 	var payload loadByTokenPayload
 	if err := token.UnsafeClaimsWithoutVerification(&payload); err != nil {
+    fmt.Printf("DEBUG: UnsafeClaimsWithoutVerification failed!")
 		return nil, false
 	}
 
@@ -121,6 +127,7 @@ func (c *Collection) LoadByToken(token *jose.JSONWebToken, claims *jose.Claims) 
 
 	// Audience is required for non k8sSA tokens.
 	if len(payload.Audience) == 0 {
+    fmt.Printf("DEBUG: no Audiences in payload!")
 		return nil, false
 	}
 
@@ -145,6 +152,7 @@ func (c *Collection) LoadByToken(token *jose.JSONWebToken, claims *jose.Claims) 
 	}
 
 	// Fallback to aud
+  fmt.Printf("DEBUG: Fallback to  c.LoadByTokenID(%s)", payload.Audience[0])
 	return c.LoadByTokenID(payload.Audience[0])
 }
 
